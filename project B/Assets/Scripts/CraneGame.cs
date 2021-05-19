@@ -12,8 +12,8 @@ public class CraneGame : MonoBehaviour
 
     public event EntityEvent OnEntitySelected = (e) => { };
     public event EntityEvent OnEntityDeselected = (e) => { };
-    public event EntityEvent OnEntityAttatched = (e) => { };
-    public event EntityEvent OnEntityDetatched = (e) => { };
+    public event EntityEvent OnEntityAttached = (e) => { };
+    public event EntityEvent OnEntityDetached = (e) => { };
     #endregion
 
     const float TROLLEY_FORWARD_LIMIT = -17f;
@@ -232,13 +232,13 @@ public class CraneGame : MonoBehaviour
 
                 m_JointForObject = joint;
 
-                OnEntityAttatched(m_DetectedObject);
+                OnEntityAttached(m_DetectedObject);
                 m_DetectedObject = null;
             }
         }
         else
         {
-            OnEntityDetatched(m_JointForObject.gameObject);
+            OnEntityDetached(m_JointForObject.gameObject);
             GameObject.Destroy(m_JointForObject);
             m_JointForObject = null;
         }

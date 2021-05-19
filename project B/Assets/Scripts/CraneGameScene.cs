@@ -27,8 +27,8 @@ public class CraneGameScene : MonoBehaviour
 
         m_Game.OnEntitySelected += HandleOnEntitySelected;
         m_Game.OnEntityDeselected += HandleOnEntityDeselected;
-        m_Game.OnEntityAttatched += HandleOnEntityAttatched;
-        m_Game.OnEntityDetatched += HandleOnEntityDetatched;
+        m_Game.OnEntityAttached += HandleOnEntityAttached;
+        m_Game.OnEntityDetached += HandleOnEntityDetached;
     }
 
     private void HandleOnEntityIn(Entity e)
@@ -54,7 +54,7 @@ public class CraneGameScene : MonoBehaviour
     {
         m_GameUI.ScoreCal(e);
     }
-    private void HandleOnEntityDetatched(GameObject e)
+    private void HandleOnEntityDetached(GameObject e)
     {
         Renderer r = e.GetComponent<ConfigurableJoint>().connectedBody.GetComponent<MeshRenderer>();
         if (r.material.color != Color.green) r.material.color = Color.white;
@@ -62,7 +62,7 @@ public class CraneGameScene : MonoBehaviour
         m_GameUI.ShowMessage(string.Format("Detatched <color=green>{0}</color>!", e.GetComponent<ConfigurableJoint>().connectedBody.gameObject.name));
     }
 
-    private void HandleOnEntityAttatched(GameObject e)
+    private void HandleOnEntityAttached(GameObject e)
     {
         e.GetComponent<MeshRenderer>().material.color = Color.cyan;
 
