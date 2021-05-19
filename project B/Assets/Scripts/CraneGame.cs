@@ -18,15 +18,14 @@ public class CraneGame : MonoBehaviour
 
     const float TROLLEY_FORWARD_LIMIT = -17f;
     const float TROLLEY_BACKWARD_LIMIT = -1f;
-    const float TROLLEY_MOVE_SPEED = 4f;
-    const float HOOK_UPWARD_LIMIT = -0.25f;
-    const float HOOK_DOWNWARD_LIMIT = -12f;
+    const float TROLLEY_MOVE_SPEED_LIMIT = 4f;
+    const float TROLLEY_JOINT_LENGTH_MAXIMUM = 14f;
+    const float TROLLEY_JOINT_LENGTH_MINIMUM = 0.25f;
     const float HOOK_MOVE_SPEED = 5f;
     const float JIB_ROTATE_SPEED = 30f;
-    const float ATTACH_DISTANCE = 5f;
+    const float ATTACH_DISTANCE = 3f;
 
-    float trolleyPosition = -1f;
-    float hookPosition = 0f;
+    float trolleyJointLength = 1f;
     /*
     [SerializeField] TowerCrane m_TowerCrane;
     public TowerCrane TowerCrane { get { return m_TowerCrane; } }
@@ -60,14 +59,17 @@ public class CraneGame : MonoBehaviour
     [SerializeField] GameObject m_Trolley;
     [SerializeField] GameObject m_Hook;
 
+    [SerializeField] ConfigurableJoint[] m_TrolleyJoints = new ConfigurableJoint[4];
+
     [SerializeField] GameObject m_JointBody;
     [SerializeField] LineRenderer m_CableToHook;
     [SerializeField] LineRenderer m_CableToObject;
+    [SerializeField] LineRenderer m_DetectAssistance;
 
 
     public void GenerateObject()
     {
-        m_Generator = new PrimitivesGenerator(10, 15, 15);
+        m_Generator = new PrimitivesGenerator(15, 25, 15);
     }
     public void RotateJib(string dir)
     {
@@ -92,17 +94,41 @@ public class CraneGame : MonoBehaviour
         {
             case "forward":
                 // Move forward.
-                trolleyPosition = Mathf.Max(m_Trolley.transform.localPosition.y - TROLLEY_MOVE_SPEED * Time.deltaTime, TROLLEY_FORWARD_LIMIT);
+                m_Trolley.GetComponent<Rigidbody>().AddRelativeForce(Vector3.down * 4f);
+                if(m_Trolley.GetComponent<Rigidbody>().velocity.magnitude > TROLLEY_MOVE_SPEED_LIMIT)
+                {
+                    m_Trolley.GetComponent<Rigidbody>().velocity = m_Trolley.GetComponent<Rigidbody>().velocity.normalized * TROLLEY_MOVE_SPEED_LIMIT;
+                }
                 break;
             case "backward":
                 // Move backward.
-                trolleyPosition = Mathf.Min(m_Trolley.transform.localPosition.y + TROLLEY_MOVE_SPEED * Time.deltaTime, TROLLEY_BACKWARD_LIMIT);
+                m_Trolley.GetComponent<Rigidbody>().AddRelativeForce(Vector3.up * 4f);
+                if (m_Trolley.GetComponent<Rigidbody>().velocity.magnitude > TROLLEY_MOVE_SPEED_LIMIT)
+                {
+                    m_Trolley.GetComponent<Rigidbody>().velocity = m_Trolley.GetComponent<Rigidbody>().velocity.normalized * TROLLEY_MOVE_SPEED_LIMIT;
+                }
                 break;
             default:
                 Debug.Log("Trolley: wrong direction!");
                 break;
         }
-        m_Trolley.transform.Translate(Vector3.down * (m_Trolley.transform.localPosition.y - trolleyPosition));
+    }
+    public void TrolleyPositionCorrector()
+    {
+        //Debug.Log(m_Trolley.GetComponent<Rigidbody>().velocity.magnitude);
+        if (m_Trolley.transform.localPosition.x != 0f)
+        {
+            m_Trolley.transform.Translate(new Vector3(- m_Trolley.transform.localPosition.x, 0, 0));
+        }
+        if (m_Trolley.transform.localPosition.y < TROLLEY_FORWARD_LIMIT)
+        {
+            m_Trolley.GetComponent<Rigidbody>().velocity = Vector3.zero;
+            m_Trolley.transform.Translate(new Vector3(0, TROLLEY_FORWARD_LIMIT - m_Trolley.transform.localPosition.y, 0));
+        }else if(m_Trolley.transform.localPosition.y > TROLLEY_BACKWARD_LIMIT)
+        {
+            m_Trolley.GetComponent<Rigidbody>().velocity = Vector3.zero;
+            m_Trolley.transform.Translate(new Vector3(0, TROLLEY_BACKWARD_LIMIT - m_Trolley.transform.localPosition.y, 0));
+        }
     }
     public void MoveHook(string dir)
     {
@@ -110,17 +136,28 @@ public class CraneGame : MonoBehaviour
         {
             case "upward":
                 // Move upward.
-                hookPosition = Mathf.Min(m_Hook.transform.localPosition.z + HOOK_MOVE_SPEED * Time.deltaTime, HOOK_UPWARD_LIMIT);
+                trolleyJointLength = Mathf.Max(trolleyJointLength - HOOK_MOVE_SPEED * Time.deltaTime, TROLLEY_JOINT_LENGTH_MINIMUM);
                 break;
             case "downward":
                 // Move downward.
-                hookPosition = Mathf.Max(m_Hook.transform.localPosition.z - HOOK_MOVE_SPEED * Time.deltaTime, HOOK_DOWNWARD_LIMIT);
+                trolleyJointLength = Mathf.Min(trolleyJointLength + HOOK_MOVE_SPEED * Time.deltaTime, TROLLEY_JOINT_LENGTH_MAXIMUM); ;
                 break;
             default:
                 Debug.Log("Hook: wrong direction!");
                 break;
         }
-        m_Hook.transform.Translate(Vector3.back * (m_Hook.transform.localPosition.z - hookPosition));
+        //Debug.Log(trolleyJointLength);
+        UpdateTrolleyJoint(trolleyJointLength);
+    }
+
+    void UpdateTrolleyJoint(float jointLength)
+    {
+        for(int i = 0; i < m_TrolleyJoints.Length ; i++)
+        {
+            var limit = m_TrolleyJoints[i].linearLimit;
+            limit.limit = jointLength;
+            m_TrolleyJoints[i].linearLimit = limit;
+        }
     }
 
     public void DetectObjects()
@@ -147,6 +184,18 @@ public class CraneGame : MonoBehaviour
         {
             RecoverDetectedObject();
         }
+    }
+    public void DetectAssistance()
+    {
+        CancelInvoke();
+        m_DetectAssistance.enabled = true;
+        m_DetectAssistance.SetPosition(0, m_Hook.transform.position);
+        m_DetectAssistance.SetPosition(1, new Vector3(m_Hook.transform.position.x, 0, m_Hook.transform.position.z));
+        Invoke("DetectAssistanceOff", 0.1f);
+    }
+    void DetectAssistanceOff()
+    {
+        m_DetectAssistance.enabled = false;
     }
     public void RecoverDetectedObject()
     {
@@ -176,8 +225,8 @@ public class CraneGame : MonoBehaviour
                 joint.linearLimit = limit;
 
                 joint.autoConfigureConnectedAnchor = false;
-                joint.connectedAnchor = new Vector3(0f, 0.5f, 0f);
-                joint.anchor = new Vector3(0f, 0f, 0f);
+                joint.connectedAnchor = new Vector3(0f, 16f, 0f);
+                joint.anchor = new Vector3(0f, -1.5f, 0f);
 
                 joint.connectedBody = m_DetectedObject.GetComponent<Rigidbody>();
 
@@ -204,7 +253,8 @@ public class CraneGame : MonoBehaviour
         if (m_CableToObject.enabled)
         {
             m_CableToObject.SetPosition(0, m_Hook.transform.position);
-            m_CableToObject.SetPosition(1, m_JointForObject.connectedBody.transform.position);
+            var connectedBodyTransform = m_JointForObject.connectedBody.transform;
+            m_CableToObject.SetPosition(1, connectedBodyTransform.TransformPoint (m_JointForObject.connectedAnchor));
         }
     }
 }

@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Entity : MonoBehaviour
 {
+
     #region Events
     public delegate void ScoreEvent(int score);
     public delegate void EntityEvent(Entity entity);
@@ -20,6 +21,7 @@ public class Entity : MonoBehaviour
     bool isIn200 = false;
     bool isRepeat = false;
     bool isOutside = false;
+    
     private void OnTriggerEnter(Collider other)
     {
         //Debug.Log("in: " + other.name);
@@ -123,10 +125,10 @@ public class Entity : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        if (this.transform.position.x > 15 || this.transform.position.z > 15 || this.transform.position.y < -5 || isOutside)
+        if (this.transform.position.y < -5)
         {
             isOutside = true;
-            Invoke("Destory", 3f);
+            Invoke("Destory", 2f);
         }
     }
     private void Destory()

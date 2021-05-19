@@ -12,8 +12,6 @@ public class CraneGameScene : MonoBehaviour
 
     public CraneGame Game { get { return m_Game; } }
 
-    
-
     // Start is called before the first frame update
     void Awake()
     {
@@ -74,7 +72,7 @@ public class CraneGameScene : MonoBehaviour
     private void HandleOnEntityDeselected(GameObject e)
     {
         Renderer r = e.GetComponent<MeshRenderer>();
-        if (r.material.color != Color.green) r.material.color = Color.white;
+        if (r.material.color != Color.green) r.material.color = Color.clear;
     }
 
     private void HandleOnEntitySelected(GameObject e)
@@ -111,14 +109,7 @@ public class CraneGameScene : MonoBehaviour
         {
             m_Game.MoveTrolley("backward");
         }
-        if (Input.GetKey(KeyCode.Z))
-        {
-            m_Game.MoveHook("downward");
-        }
-        else if (Input.GetKey(KeyCode.X))
-        {
-            m_Game.MoveHook("upward");
-        }
+        m_Game.TrolleyPositionCorrector();
 
         // Select camera
 
@@ -151,9 +142,25 @@ public class CraneGameScene : MonoBehaviour
         }
 
         m_Game.UpdateCable();
+
+        // Detect assistance
+        if (Input.GetKey(KeyCode.C))
+        {
+            m_Game.DetectAssistance();
+        }
+
     }
     private void FixedUpdate()
     {
+        // Control tower crane model
+        if (Input.GetKey(KeyCode.Z))
+        {
+            m_Game.MoveHook("downward");
+        }
+        else if (Input.GetKey(KeyCode.X))
+        {
+            m_Game.MoveHook("upward");
+        }
 
         // Control camera
         if (cameraIndex == 0)
