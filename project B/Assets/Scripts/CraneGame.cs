@@ -20,7 +20,7 @@ public class CraneGame : MonoBehaviour
     const float TROLLEY_BACKWARD_LIMIT = -1f;
     const float TROLLEY_MOVE_SPEED_LIMIT = 4f;
     const float TROLLEY_JOINT_LENGTH_MAXIMUM = 14f;
-    const float TROLLEY_JOINT_LENGTH_MINIMUM = 0.25f;
+    const float TROLLEY_JOINT_LENGTH_MINIMUM = 0.5f;
     const float HOOK_MOVE_SPEED = 5f;
     const float JIB_ROTATE_SPEED = 30f;
     const float ATTACH_DISTANCE = 3f;
@@ -69,7 +69,7 @@ public class CraneGame : MonoBehaviour
 
     public void GenerateObject()
     {
-        m_Generator = new PrimitivesGenerator(15, 25, 15);
+        m_Generator = new PrimitivesGenerator(15, 20, 15);
     }
     public void RotateJib(string dir)
     {

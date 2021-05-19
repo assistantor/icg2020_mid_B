@@ -125,7 +125,7 @@ public class Entity : MonoBehaviour
     }
     private void FixedUpdate()
     {
-        if (this.transform.position.y < -5)
+        if (this.transform.position.y < -10)
         {
             isOutside = true;
             Invoke("Destory", 2f);
