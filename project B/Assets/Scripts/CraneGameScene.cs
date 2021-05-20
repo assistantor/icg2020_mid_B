@@ -5,12 +5,7 @@ using UnityEngine;
 
 public class CraneGameScene : MonoBehaviour
 {
-    [SerializeField] CraneGame m_Game;
-    [SerializeField] GameUI m_GameUI;
-
-    int cameraIndex = 0;
-
-    public CraneGame Game { get { return m_Game; } }
+    Color leafColor;
 
     // Start is called before the first frame update
     void Awake()
@@ -22,13 +17,14 @@ public class CraneGameScene : MonoBehaviour
             e.OnEntityIn += HandleOnEntityIn;
             e.OnEntityOut += HandleOnEntityOut;
             e.OnEntityAway += HandleOnEntityAway;
+            leafColor = e.GetComponent<MeshRenderer>().material.color;
         }
         m_Game.OnMessageAdded += HandleOnMessageAdded;
 
         m_Game.OnEntitySelected += HandleOnEntitySelected;
         m_Game.OnEntityDeselected += HandleOnEntityDeselected;
-        m_Game.OnEntityAttached += HandleOnEntityAttached;
-        m_Game.OnEntityDetached += HandleOnEntityDetached;
+        m_Game.OnEntityAttatched += HandleOnEntityAttatched;
+        m_Game.OnEntityDetatched += HandleOnEntityDetatched;
     }
 
     private void HandleOnEntityIn(Entity e)
@@ -39,7 +35,7 @@ public class CraneGameScene : MonoBehaviour
     }
     private void HandleOnEntityOut(Entity e)
     {
-        e.GetComponent<MeshRenderer>().material.color = Color.white;
+        e.GetComponent<MeshRenderer>().material.color = leafColor;
         m_GameUI.ScoreOut();
         m_GameUI.ShowMessage(string.Format("Oops! <color=green>{0}</color>! is out.", e.name));
     }
@@ -54,15 +50,15 @@ public class CraneGameScene : MonoBehaviour
     {
         m_GameUI.ScoreCal(e);
     }
-    private void HandleOnEntityDetached(GameObject e)
+
+    private void HandleOnEntityDetatched(GameObject e)
     {
         Renderer r = e.GetComponent<ConfigurableJoint>().connectedBody.GetComponent<MeshRenderer>();
-        if (r.material.color != Color.green) r.material.color = Color.white;
+        if (r.material.color != Color.green) r.material.color = leafColor;
 
         m_GameUI.ShowMessage(string.Format("Detatched <color=green>{0}</color>!", e.GetComponent<ConfigurableJoint>().connectedBody.gameObject.name));
     }
-
-    private void HandleOnEntityAttached(GameObject e)
+    private void HandleOnEntityAttatched(GameObject e)
     {
         e.GetComponent<MeshRenderer>().material.color = Color.cyan;
 
@@ -72,9 +68,8 @@ public class CraneGameScene : MonoBehaviour
     private void HandleOnEntityDeselected(GameObject e)
     {
         Renderer r = e.GetComponent<MeshRenderer>();
-        if (r.material.color != Color.green) r.material.color = Color.clear;
+        if (r.material.color != Color.green) r.material.color = leafColor;
     }
-
     private void HandleOnEntitySelected(GameObject e)
     {
         Renderer r = e.GetComponent<MeshRenderer>();
